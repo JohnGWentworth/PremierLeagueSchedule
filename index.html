@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premier League Broadcast Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            color: white;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                        <i data-lucide="trophy" class="text-white w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-tight leading-none">Premier League</h1>
+                        <p class="text-xs text-gray-400 font-medium mt-1">2025/26 Season • Full Broadcast Guide</p>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Region Toggle -->
+                    <div class="bg-gray-700 p-1 rounded-lg flex items-center shadow-inner">
+                        <button id="btn-us" class="px-4 py-1.5 rounded-md text-sm font-semibold transition-all bg-purple-600 text-white shadow-sm" onclick="setRegion('US')">
+                            🇺🇸 US TV
+                        </button>
+                        <button id="btn-uk" class="px-4 py-1.5 rounded-md text-sm font-semibold text-gray-400 hover:text-white transition-all" onclick="setRegion('UK')">
+                            🇬🇧 UK TV
+                        </button>
+                    </div>
+                    
+                    <!-- Team Filter -->
+                    <div class="relative group">
+                        <select id="team-filter" class="bg-gray-700 text-white text-sm rounded-lg pl-3 pr-9 py-2 border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 focus:outline-none appearance-none cursor-pointer min-w-[180px] transition-colors">
+                            <option value="all">All Teams</option>
+                            <!-- Options populated by JS -->
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none group-hover:text-white transition-colors"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow px-4 py-8 max-w-6xl mx-auto w-full">
+        
+        <!-- Info Banner -->
+        <div class="bg-indigo-900/40 border border-indigo-500/30 rounded-xl p-4 mb-8 flex items-start gap-4 backdrop-blur-sm">
+            <div class="p-2 bg-indigo-500/20 rounded-lg shrink-0">
+                <i data-lucide="calendar-check" class="w-5 h-5 text-indigo-300"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-indigo-100 text-sm">Full Season Schedule Loaded</h3>
+                <p class="text-indigo-200 text-xs mt-1 leading-relaxed max-w-3xl">
+                    Displaying <strong>all remaining fixtures</strong> through May 24, 2026. 
+                    <br><span class="opacity-70">Note: TV selections for February–May are provisional. "Peacock" (US) and "None" (UK) are used as placeholders for standard Saturday 3pm slots.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Schedule Container -->
+        <div id="schedule-container" class="space-y-10">
+            <!-- Content injected by JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center">
+            <div class="bg-gray-800 p-6 rounded-full mb-4 shadow-xl">
+                <i data-lucide="search-x" class="w-10 h-10 text-gray-500"></i>
+            </div>
+            <h3 class="text-lg font-medium text-white">No matches found</h3>
+            <p class="text-gray-400 text-sm mt-1">Try selecting a different team or clearing your filters.</p>
+            <button onclick="resetFilters()" class="mt-6 text-purple-400 hover:text-purple-300 text-sm font-semibold hover:underline">
+                Clear Filters
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-10 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-xs leading-relaxed">
+                <strong>Data Source:</strong> Official 2025/26 Premier League Fixture List.<br>
+                All times are subject to change by broadcasters. "Peacock" implies exclusive streaming in the US. "3pm Blackout" applies to UK viewers.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Data Configuration ---
+        
+        const teams = {
+            "Arsenal": { color: "bg-red-600", abbr: "ARS" },
+            "Aston Villa": { color: "bg-red-800", abbr: "AVL" },
+            "Bournemouth": { color: "bg-red-500", abbr: "BOU" },
+            "Brentford": { color: "bg-red-400", abbr: "BRE" },
+            "Brighton": { color: "bg-blue-500", abbr: "BHA" },
+            "Burnley": { color: "bg-red-700", abbr: "BUR" },
+            "Chelsea": { color: "bg-blue-700", abbr: "CHE" },
+            "Crystal Palace": { color: "bg-blue-800", abbr: "CRY" },
+            "Everton": { color: "bg-blue-600", abbr: "EVE" },
+            "Fulham": { color: "bg-gray-800", abbr: "FUL" },
+            "Leeds United": { color: "bg-yellow-500 text-black", abbr: "LEE" },
+            "Liverpool": { color: "bg-red-700", abbr: "LIV" },
+            "Man City": { color: "bg-sky-400 text-black", abbr: "MCI" },
+            "Man Utd": { color: "bg-red-700", abbr: "MUN" },
+            "Newcastle": { color: "bg-gray-700", abbr: "NEW" },
+            "Nott'm Forest": { color: "bg-red-600", abbr: "NFO" },
+            "Southampton": { color: "bg-red-600", abbr: "SOU" }, 
+            "Sunderland": { color: "bg-red-500", abbr: "SUN" },
+            "Tottenham": { color: "bg-gray-100 text-gray-900", abbr: "TOT" },
+            "West Ham": { color: "bg-red-800", abbr: "WHU" },
+            "Wolves": { color: "bg-orange-500 text-black", abbr: "WOL" }
+        };
+
+        // Complete Schedule: Late Nov 2025 - May 2026
+        const matches = [
+            // --- Matchweek 13 ---
+            { date: "2025-11-29", home: "Brentford", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-11-29", home: "Man City", away: "Leeds United", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-11-29", home: "Sunderland", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-11-29", home: "Everton", away: "Newcastle", timeUS: "12:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-11-29", home: "Tottenham", away: "Fulham", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-11-30", home: "Crystal Palace", away: "Man Utd", timeUS: "07:00 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2025-11-30", home: "Aston Villa", away: "Wolves", timeUS: "09:05 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-11-30", home: "Nott'm Forest", away: "Brighton", timeUS: "09:05 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-11-30", home: "West Ham", away: "Liverpool", timeUS: "09:05 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-11-30", home: "Chelsea", away: "Arsenal", timeUS: "11:30 AM", tvUS: "NBC", tvUK: "Sky Sports" },
+
+            // --- Matchweek 14 (Midweek) ---
+            { date: "2025-12-02", home: "Bournemouth", away: "Everton", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-02", home: "Fulham", away: "Man City", timeUS: "2:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-02", home: "Newcastle", away: "Tottenham", timeUS: "3:15 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Arsenal", away: "Brentford", timeUS: "2:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Brighton", away: "Aston Villa", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Burnley", away: "Crystal Palace", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Wolves", away: "Nott'm Forest", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Leeds United", away: "Chelsea", timeUS: "3:15 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-03", home: "Liverpool", away: "Sunderland", timeUS: "3:15 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-04", home: "Man Utd", away: "West Ham", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 15 ---
+            { date: "2025-12-06", home: "Aston Villa", away: "Arsenal", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2025-12-06", home: "Bournemouth", away: "Chelsea", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-06", home: "Everton", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-06", home: "Man City", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-06", home: "Newcastle", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-06", home: "Tottenham", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-06", home: "Leeds United", away: "Liverpool", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2025-12-07", home: "Brighton", away: "West Ham", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-07", home: "Fulham", away: "Crystal Palace", timeUS: "11:30 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-08", home: "Wolves", away: "Man Utd", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 16 ---
+            { date: "2025-12-13", home: "Chelsea", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-13", home: "Liverpool", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-13", home: "Burnley", away: "Fulham", timeUS: "12:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-13", home: "Arsenal", away: "Wolves", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2025-12-14", home: "Crystal Palace", away: "Man City", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-14", home: "Nott'm Forest", away: "Tottenham", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-14", home: "Sunderland", away: "Newcastle", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-14", home: "West Ham", away: "Aston Villa", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-14", home: "Brentford", away: "Leeds United", timeUS: "11:30 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-15", home: "Man Utd", away: "Bournemouth", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 17 ---
+            { date: "2025-12-20", home: "Newcastle", away: "Chelsea", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2025-12-20", home: "Bournemouth", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-20", home: "Brighton", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-20", home: "Man City", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-20", home: "Wolves", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-20", home: "Tottenham", away: "Liverpool", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2025-12-20", home: "Everton", away: "Arsenal", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-20", home: "Leeds United", away: "Crystal Palace", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-21", home: "Aston Villa", away: "Man Utd", timeUS: "11:30 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-22", home: "Fulham", away: "Nott'm Forest", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 18 (Boxing Day) ---
+            { date: "2025-12-26", home: "Man Utd", away: "Newcastle", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-27", home: "Nott'm Forest", away: "Man City", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2025-12-27", home: "Arsenal", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-27", home: "Brentford", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-27", home: "Burnley", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-27", home: "Liverpool", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-27", home: "West Ham", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2025-12-27", home: "Chelsea", away: "Aston Villa", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2025-12-28", home: "Sunderland", away: "Leeds United", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-28", home: "Crystal Palace", away: "Tottenham", timeUS: "11:30 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 19 (New Year) ---
+            { date: "2025-12-30", home: "Burnley", away: "Newcastle", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-30", home: "Chelsea", away: "Bournemouth", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-30", home: "Nott'm Forest", away: "Everton", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-30", home: "West Ham", away: "Brighton", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2025-12-30", home: "Arsenal", away: "Aston Villa", timeUS: "3:15 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2025-12-30", home: "Man Utd", away: "Wolves", timeUS: "3:15 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-01", home: "Crystal Palace", away: "Fulham", timeUS: "12:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-01", home: "Liverpool", away: "Leeds United", timeUS: "12:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-01", home: "Brentford", away: "Tottenham", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-01", home: "Sunderland", away: "Man City", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+
+            // --- Matchweek 20 ---
+            { date: "2026-01-03", home: "Aston Villa", away: "Nott'm Forest", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-01-03", home: "Brighton", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-03", home: "Wolves", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-03", home: "Bournemouth", away: "Arsenal", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-01-04", home: "Leeds United", away: "Man Utd", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-01-04", home: "Everton", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-04", home: "Fulham", away: "Liverpool", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-04", home: "Newcastle", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-04", home: "Tottenham", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-04", home: "Man City", away: "Chelsea", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+
+            // --- Matchweek 21 ---
+            { date: "2026-01-06", home: "West Ham", away: "Nott'm Forest", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Bournemouth", away: "Tottenham", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Brentford", away: "Sunderland", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Crystal Palace", away: "Aston Villa", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Everton", away: "Wolves", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Fulham", away: "Chelsea", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Man City", away: "Brighton", timeUS: "2:30 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Burnley", away: "Man Utd", timeUS: "3:15 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-07", home: "Newcastle", away: "Leeds United", timeUS: "3:15 PM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-08", home: "Arsenal", away: "Liverpool", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 22 ---
+            { date: "2026-01-17", home: "Man Utd", away: "Man City", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-01-17", home: "Chelsea", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-17", home: "Leeds United", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-17", home: "Liverpool", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-17", home: "Sunderland", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-17", home: "Tottenham", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-17", home: "Nott'm Forest", away: "Arsenal", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-01-18", home: "Wolves", away: "Newcastle", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-18", home: "Aston Villa", away: "Everton", timeUS: "11:30 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-19", home: "Brighton", away: "Bournemouth", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 23 ---
+            { date: "2026-01-24", home: "West Ham", away: "Sunderland", timeUS: "7:30 AM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-01-24", home: "Burnley", away: "Tottenham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-24", home: "Fulham", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-24", home: "Man City", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-01-24", home: "Bournemouth", away: "Liverpool", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-01-25", home: "Brentford", away: "Nott'm Forest", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-25", home: "Crystal Palace", away: "Chelsea", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-01-25", home: "Newcastle", away: "Aston Villa", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-01-25", home: "Arsenal", away: "Man Utd", timeUS: "11:30 AM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-01-26", home: "Everton", away: "Leeds United", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 24 ---
+             { date: "2026-01-31", home: "Brighton", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Leeds United", away: "Arsenal", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Wolves", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Man Utd", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Tottenham", away: "Man City", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Aston Villa", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Nott'm Forest", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Sunderland", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+             { date: "2026-01-31", home: "Chelsea", away: "West Ham", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+             { date: "2026-01-31", home: "Liverpool", away: "Newcastle", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 25 (Feb 1-2) ---
+            { date: "2026-02-01", home: "Aston Villa", away: "Brentford", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-02-01", home: "Man Utd", away: "Fulham", timeUS: "9:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-02-01", home: "Nott'm Forest", away: "Crystal Palace", timeUS: "9:00 AM", tvUS: "Peacock", tvUK: "Sky Sports" },
+            { date: "2026-02-01", home: "Tottenham", away: "Man City", timeUS: "11:30 AM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-02-02", home: "Sunderland", away: "Burnley", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 26 (Feb 7) ---
+            { date: "2026-02-07", home: "Bournemouth", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Arsenal", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Brighton", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Burnley", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Fulham", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Leeds United", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Liverpool", away: "Man City", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-02-07", home: "Man Utd", away: "Tottenham", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-02-07", home: "Newcastle", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-07", home: "Wolves", away: "Chelsea", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 27 (Midweek Feb 11) ---
+            { date: "2026-02-11", home: "Aston Villa", away: "Brighton", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Brentford", away: "Arsenal", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Chelsea", away: "Leeds United", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Crystal Palace", away: "Burnley", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Everton", away: "Bournemouth", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Man City", away: "Fulham", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Nott'm Forest", away: "Wolves", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Sunderland", away: "Liverpool", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "Tottenham", away: "Newcastle", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-02-11", home: "West Ham", away: "Man Utd", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+
+            // --- Matchweek 28 (Feb 21) ---
+            { date: "2026-02-21", home: "Aston Villa", away: "Leeds United", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Brentford", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Chelsea", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Crystal Palace", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Everton", away: "Man Utd", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-02-21", home: "Man City", away: "Newcastle", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Nott'm Forest", away: "Liverpool", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-02-21", home: "Sunderland", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-21", home: "Tottenham", away: "Arsenal", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-02-21", home: "West Ham", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 29 (Feb 28) ---
+            { date: "2026-02-28", home: "Bournemouth", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Arsenal", away: "Chelsea", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-02-28", home: "Brighton", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Burnley", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Fulham", away: "Tottenham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Leeds United", away: "Man City", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-02-28", home: "Liverpool", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Man Utd", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Newcastle", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-02-28", home: "Wolves", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 30 (Midweek Mar 4) ---
+            { date: "2026-03-04", home: "Bournemouth", away: "Brentford", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Aston Villa", away: "Chelsea", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Brighton", away: "Arsenal", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Everton", away: "Burnley", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Fulham", away: "West Ham", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Leeds United", away: "Sunderland", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Man City", away: "Nott'm Forest", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Newcastle", away: "Man Utd", timeUS: "3:00 PM", tvUS: "USA Network", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Tottenham", away: "Crystal Palace", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+            { date: "2026-03-04", home: "Wolves", away: "Liverpool", timeUS: "3:00 PM", tvUS: "Peacock", tvUK: "TNT Sports" },
+
+            // --- Matchweek 31 (Mar 14) ---
+            { date: "2026-03-14", home: "Arsenal", away: "Everton", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-03-14", home: "Brentford", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "Burnley", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "Chelsea", away: "Newcastle", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-03-14", home: "Crystal Palace", away: "Leeds United", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "Liverpool", away: "Tottenham", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-03-14", home: "Man Utd", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "Nott'm Forest", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "Sunderland", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-14", home: "West Ham", away: "Man City", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 32 (Mar 21) ---
+            { date: "2026-03-21", home: "Bournemouth", away: "Man Utd", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-03-21", home: "Aston Villa", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Brighton", away: "Liverpool", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Everton", away: "Chelsea", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Fulham", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Leeds United", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Man City", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Newcastle", away: "Sunderland", timeUS: "12:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-03-21", home: "Tottenham", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-03-21", home: "Wolves", away: "Arsenal", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 33 (Apr 11) ---
+            { date: "2026-04-11", home: "Arsenal", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Brentford", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Burnley", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Chelsea", away: "Man City", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-04-11", home: "Crystal Palace", away: "Newcastle", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Liverpool", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Man Utd", away: "Leeds United", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-04-11", home: "Nott'm Forest", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "Sunderland", away: "Tottenham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-11", home: "West Ham", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 34 (Apr 18) ---
+            { date: "2026-04-18", home: "Aston Villa", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Brentford", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Chelsea", away: "Man Utd", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-04-18", home: "Crystal Palace", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Everton", away: "Liverpool", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-04-18", home: "Leeds United", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Man City", away: "Arsenal", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-04-18", home: "Newcastle", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Nott'm Forest", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-18", home: "Tottenham", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 35 (Apr 25) ---
+            { date: "2026-04-25", home: "Bournemouth", away: "Leeds United", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Arsenal", away: "Newcastle", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-04-25", home: "Brighton", away: "Chelsea", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Burnley", away: "Man City", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Fulham", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Liverpool", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Man Utd", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Sunderland", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "West Ham", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-04-25", home: "Wolves", away: "Tottenham", timeUS: "12:30 PM", tvUS: "USA Network", tvUK: "Sky Sports" },
+
+            // --- Matchweek 36 (May 2) ---
+            { date: "2026-05-02", home: "Bournemouth", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Arsenal", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Aston Villa", away: "Tottenham", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-05-02", home: "Brentford", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Chelsea", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Everton", away: "Man City", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Leeds United", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Man Utd", away: "Liverpool", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-05-02", home: "Newcastle", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-02", home: "Wolves", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 37 (May 9) ---
+            { date: "2026-05-09", home: "Brighton", away: "Wolves", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Burnley", away: "Aston Villa", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Crystal Palace", away: "Everton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Fulham", away: "Bournemouth", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Liverpool", away: "Chelsea", timeUS: "12:30 PM", tvUS: "NBC", tvUK: "Sky Sports" },
+            { date: "2026-05-09", home: "Man City", away: "Brentford", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Nott'm Forest", away: "Newcastle", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "Sunderland", away: "Man Utd", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "None" },
+            { date: "2026-05-09", home: "Tottenham", away: "Leeds United", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-09", home: "West Ham", away: "Arsenal", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 38 (May 17 - Penultimate?) ---
+            // Wikipedia Source 5.4 says season ends May 24.
+            // Search 4.1 says May 17 is Penultimate round.
+            { date: "2026-05-17", home: "Bournemouth", away: "Man City", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Arsenal", away: "Burnley", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Aston Villa", away: "Liverpool", timeUS: "10:00 AM", tvUS: "USA Network", tvUK: "Sky Sports" },
+            { date: "2026-05-17", home: "Brentford", away: "Crystal Palace", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Chelsea", away: "Tottenham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Everton", away: "Sunderland", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Leeds United", away: "Brighton", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Man Utd", away: "Nott'm Forest", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Newcastle", away: "West Ham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+            { date: "2026-05-17", home: "Wolves", away: "Fulham", timeUS: "10:00 AM", tvUS: "Peacock", tvUK: "None" },
+
+            // --- Matchweek 39 (Final Day - May 24) ---
+            { date: "2026-05-24", home: "Brighton", away: "Man Utd", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Burnley", away: "Wolves", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Crystal Palace", away: "Arsenal", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Fulham", away: "Newcastle", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Liverpool", away: "Brentford", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Man City", away: "Aston Villa", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Nott'm Forest", away: "Bournemouth", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Sunderland", away: "Chelsea", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "Tottenham", away: "Everton", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" },
+            { date: "2026-05-24", home: "West Ham", away: "Leeds United", timeUS: "11:00 AM", tvUS: "Peacock", tvUK: "Sky Sports (Select Matches)" }
+        ];
+
+        // --- State Management ---
+        let currentRegion = 'US';
+        let currentTeamFilter = 'all';
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            populateTeamFilter();
+            renderSchedule();
+        });
+
+        // --- Functions ---
+        function setRegion(region) {
+            currentRegion = region;
+            const btnUS = document.getElementById('btn-us');
+            const btnUK = document.getElementById('btn-uk');
+            
+            if (region === 'US') {
+                btnUS.className = "px-4 py-1.5 rounded-md text-sm font-semibold transition-all bg-purple-600 text-white shadow-sm ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-800";
+                btnUK.className = "px-4 py-1.5 rounded-md text-sm font-semibold text-gray-400 hover:text-white transition-all";
+            } else {
+                btnUK.className = "px-4 py-1.5 rounded-md text-sm font-semibold transition-all bg-sky-600 text-white shadow-sm ring-2 ring-sky-500 ring-offset-2 ring-offset-gray-800";
+                btnUS.className = "px-4 py-1.5 rounded-md text-sm font-semibold text-gray-400 hover:text-white transition-all";
+            }
+            renderSchedule();
+        }
+
+        function populateTeamFilter() {
+            const select = document.getElementById('team-filter');
+            const teamNames = Object.keys(teams).sort();
+            teamNames.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', (e) => {
+                currentTeamFilter = e.target.value;
+                renderSchedule();
+            });
+        }
+
+        function resetFilters() {
+            currentTeamFilter = 'all';
+            document.getElementById('team-filter').value = 'all';
+            renderSchedule();
+        }
+
+        function formatDate(dateString) {
+            const options = { weekday: 'long', month: 'short', day: 'numeric' };
+            const date = new Date(dateString + 'T12:00:00');
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function getTimeDiff(timeUS) {
+            const [time, modifier] = timeUS.split(' ');
+            let [hours, minutes] = time.split(':');
+            hours = parseInt(hours);
+            if (modifier === 'PM' && hours !== 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+            
+            let ukHours = (hours + 5) % 24;
+            const ampm = ukHours >= 12 ? 'PM' : 'AM';
+            ukHours = ukHours % 12;
+            ukHours = ukHours ? ukHours : 12; // the hour '0' should be '12'
+            return `${ukHours}:${minutes} ${ampm}`;
+        }
+
+        function getServiceIcon(serviceName) {
+            const name = serviceName.toLowerCase();
+            if (name.includes('peacock')) return '<span class="text-xl">🦚</span>';
+            if (name.includes('usa')) return '<span class="text-xl">🇺🇸</span>';
+            if (name.includes('nbc')) return '<span class="text-xl">🦚</span>';
+            if (name.includes('sky')) return '<span class="text-xl">📡</span>';
+            if (name.includes('tnt')) return '<span class="text-xl">🧨</span>';
+            if (name.includes('none')) return '<span class="text-xl">🚫</span>';
+            return '<span class="text-xl">📺</span>';
+        }
+
+        function getServiceColor(serviceName) {
+            const name = serviceName.toLowerCase();
+            if (name.includes('peacock')) return 'text-yellow-400';
+            if (name.includes('usa')) return 'text-red-400';
+            if (name.includes('nbc')) return 'text-purple-400';
+            if (name.includes('sky')) return 'text-sky-400';
+            if (name.includes('tnt')) return 'text-pink-500';
+            return 'text-gray-500';
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            const emptyState = document.getElementById('empty-state');
+            container.innerHTML = '';
+
+            const filteredMatches = matches.filter(match => {
+                if (currentTeamFilter === 'all') return true;
+                return match.home === currentTeamFilter || match.away === currentTeamFilter;
+            });
+
+            if (filteredMatches.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            const grouped = filteredMatches.reduce((groups, match) => {
+                if (!groups[match.date]) groups[match.date] = [];
+                groups[match.date].push(match);
+                return groups;
+            }, {});
+
+            const sortedDates = Object.keys(grouped).sort();
+
+            sortedDates.forEach((date, index) => {
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'fade-in';
+                dateGroup.style.animationDelay = `${index * 0.05}s`;
+                
+                // Date Header
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'flex items-center gap-3 mb-4 pb-2 border-b border-gray-700';
+                dateHeader.innerHTML = `
+                    <div class="bg-gray-800 p-2 rounded-lg">
+                        <i data-lucide="calendar" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-200 tracking-wide">${formatDate(date)}</h2>
+                `;
+                dateGroup.appendChild(dateHeader);
+
+                // Grid
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5';
+
+                grouped[date].forEach(match => {
+                    const tv = currentRegion === 'US' ? match.tvUS : match.tvUK;
+                    const time = currentRegion === 'US' ? match.timeUS : getTimeDiff(match.timeUS);
+                    const isUkBlackout = currentRegion === 'UK' && match.tvUK === 'None';
+                    
+                    const homeTeam = teams[match.home] || { color: 'bg-gray-600', abbr: match.home.substring(0,3).toUpperCase() };
+                    const awayTeam = teams[match.away] || { color: 'bg-gray-600', abbr: match.away.substring(0,3).toUpperCase() };
+
+                    // Highlight Big Matches
+                    const isBigMatch = (['Arsenal', 'Chelsea', 'Liverpool', 'Man City', 'Man Utd', 'Tottenham'].includes(match.home) && 
+                                      ['Arsenal', 'Chelsea', 'Liverpool', 'Man City', 'Man Utd', 'Tottenham'].includes(match.away));
+
+                    const card = document.createElement('div');
+                    card.className = `bg-gray-800 rounded-xl overflow-hidden shadow-lg border ${isBigMatch ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-700'} hover:border-gray-500 transition-all flex flex-col group h-full`;
+
+                    card.innerHTML = `
+                        <!-- Card Header -->
+                        <div class="px-4 py-3 ${isBigMatch ? 'bg-indigo-900/30' : 'bg-gray-800/50'} border-b border-gray-700 flex justify-between items-center">
+                            <span class="text-sm font-semibold text-gray-300 flex items-center gap-1.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-gray-500"></i>
+                                ${time} <span class="text-xs text-gray-500 uppercase">${currentRegion === 'US' ? 'ET' : 'GMT'}</span>
+                            </span>
+                            ${isBigMatch ? '<span class="text-[10px] font-bold bg-indigo-600 text-white px-2 py-0.5 rounded tracking-wider">BIG MATCH</span>' : ''}
+                        </div>
+
+                        <!-- Teams -->
+                        <div class="p-5 flex items-center justify-between flex-grow">
+                            <div class="flex flex-col items-center gap-2 w-1/3 group-hover:transform group-hover:scale-105 transition-transform duration-300">
+                                <div class="team-logo ${homeTeam.color} shadow-lg ring-2 ring-gray-700/50">
+                                    ${homeTeam.abbr}
+                                </div>
+                                <span class="text-xs font-bold text-center leading-tight text-gray-200">${match.home}</span>
+                            </div>
+
+                            <div class="text-gray-600 font-bold text-sm bg-gray-900 px-2 py-1 rounded">VS</div>
+
+                            <div class="flex flex-col items-center gap-2 w-1/3 group-hover:transform group-hover:scale-105 transition-transform duration-300">
+                                <div class="team-logo ${awayTeam.color} shadow-lg ring-2 ring-gray-700/50">
+                                    ${awayTeam.abbr}
+                                </div>
+                                <span class="text-xs font-bold text-center leading-tight text-gray-200">${match.away}</span>
+                            </div>
+                        </div>
+
+                        <!-- Broadcaster Info -->
+                        <div class="mt-auto bg-gray-900/60 p-3 border-t border-gray-700">
+                            <div class="flex items-center gap-2">
+                                ${getServiceIcon(tv)}
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold ${getServiceColor(tv)} truncate">
+                                        ${isUkBlackout ? 'Not Televised' : tv}
+                                    </span>
+                                    <span class="text-[10px] text-gray-500">
+                                        ${isUkBlackout ? 'Saturday 3pm Blackout' : 'Live Broadcast'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                dateGroup.appendChild(grid);
+                container.appendChild(dateGroup);
+            });
+            
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
