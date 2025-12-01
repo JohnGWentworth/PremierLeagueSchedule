@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9610577818327831"
+     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9610577818327831"
      crossorigin="anonymous"></script>
-    <style>
+	<style>
         body { font-family: 'Inter', sans-serif; }
         .team-logo {
             width: 40px;
@@ -97,10 +97,10 @@
                 <i data-lucide="calendar-check" class="w-5 h-5 text-indigo-300"></i>
             </div>
             <div>
-                <h3 class="font-semibold text-indigo-100 text-sm">Full Season Schedule Loaded</h3>
+                <h3 class="font-semibold text-indigo-100 text-sm">Upcoming Matches</h3>
                 <p class="text-indigo-200 text-xs mt-1 leading-relaxed max-w-3xl">
-                    Displaying <strong>all remaining fixtures</strong> through May 24, 2026. 
-                    <br><span class="opacity-70">Note: TV selections for February–May are provisional. "Peacock" (US) and "None" (UK) are used as placeholders for standard Saturday 3pm slots.</span>
+                    Displaying <strong>upcoming fixtures</strong> through May 24, 2026. 
+                    <br><span class="opacity-70">Completed games from previous days are automatically hidden.</span>
                 </p>
             </div>
         </div>
@@ -113,12 +113,12 @@
         <!-- Empty State -->
         <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center">
             <div class="bg-gray-800 p-6 rounded-full mb-4 shadow-xl">
-                <i data-lucide="search-x" class="w-10 h-10 text-gray-500"></i>
+                <i data-lucide="check-circle-2" class="w-10 h-10 text-green-500"></i>
             </div>
-            <h3 class="text-lg font-medium text-white">No matches found</h3>
-            <p class="text-gray-400 text-sm mt-1">Try selecting a different team or clearing your filters.</p>
+            <h3 class="text-lg font-medium text-white">All caught up!</h3>
+            <p class="text-gray-400 text-sm mt-1">No upcoming matches found for the selected criteria.</p>
             <button onclick="resetFilters()" class="mt-6 text-purple-400 hover:text-purple-300 text-sm font-semibold hover:underline">
-                Clear Filters
+                View All Upcoming
             </button>
         </div>
 
@@ -579,7 +579,18 @@
             const emptyState = document.getElementById('empty-state');
             container.innerHTML = '';
 
+            // Get start of today (local time)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Filter matches
             const filteredMatches = matches.filter(match => {
+                // 1. Check Date: Remove games from dates strictly before today
+                const [y, m, d] = match.date.split('-').map(Number);
+                const matchDate = new Date(y, m - 1, d);
+                if (matchDate < today) return false;
+
+                // 2. Check Team Filter
                 if (currentTeamFilter === 'all') return true;
                 return match.home === currentTeamFilter || match.away === currentTeamFilter;
             });
@@ -691,7 +702,4 @@
         }
     </script>
 </body>
-
 </html>
-
-
